@@ -33,13 +33,6 @@ You can ask for a prefix that matches all keys with specific values:
 
 ``` go
 // iterate an album
-prefix := compound.Prefix(MyKey{User: "jdoe", Album: "Travel"})
-```
-
-The above works by skipping zero valued items at the end. Sometimes
-the zero value is necessary, so you can also be more explicit:
-
-``` go
 prefix := compound.PrefixN(MyKey{User: "jdoe", Album: "Travel"}, 2)
 ```
 
@@ -49,7 +42,6 @@ the above will not match an album named "Travel in Europe".
 To ask for matching partial values of the last key, use:
 
 ``` go
-prefix := compound.PrefixPartial(MyKey{User: "jdoe", Album: "Travel in "})
 prefix := compound.PrefixNPartial(MyKey{User: "jdoe", Album: "Travel in "}, 2)
 ```
 
@@ -59,13 +51,13 @@ in Europe".
 Prefixes can also be decoded:
 
 ``` go
-// for keys from Prefix or PrefixN
+// for keys from PrefixN
 var data MyKey
 err := compound.DecodePrefix(key, &data)
 ```
 
 ``` go
-// for keys from PrefixPartial or PrefixNPartial
+// for keys from PrefixNPartial
 var data MyKey
 err := compound.DecodePrefixPartial(key, &data)
 ```

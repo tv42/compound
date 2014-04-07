@@ -109,17 +109,11 @@ func Key(value interface{}) []byte {
 	return makeKey(v, v.NumField())
 }
 
-// func Prefix(value interface{}) []byte {
-// }
-
 // PrefixN encodes the first n fields. See Key for more.
 func PrefixN(value interface{}, n int) []byte {
 	v := checkType(value)
 	return makeKey(v, n)
 }
-
-// func PrefixPartial(value interface{}) []byte {
-// }
 
 // PrefixNPartial encodes the first n fields. The last key will not be
 // marked as complete, allowing to perform prefix matching within the

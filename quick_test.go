@@ -72,3 +72,22 @@ func TestQuickRoundtrip(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestQuickErrorShort(t *testing.T) {
+	check := func(a MyType) bool {
+		key := compound.Key(a)
+		for i := 0; i < len(key); i++ {
+			var r MyType
+			input := key[:i]
+			err := compound.Decode(input, &r)
+			if err != compound.ErrTooShort {
+				t.Errorf("expected too short error for %q, got %v", input, err)
+				return false
+			}
+		}
+		return true
+	}
+	if err := quick.Check(check, nil); err != nil {
+		t.Error(err)
+	}
+}

@@ -1,6 +1,7 @@
 package compound_test
 
 import (
+	"bytes"
 	"testing"
 	"testing/quick"
 
@@ -86,6 +87,17 @@ func TestQuickErrorShort(t *testing.T) {
 			}
 		}
 		return true
+	}
+	if err := quick.Check(check, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestQuickPrefixProperty(t *testing.T) {
+	check := func(a MyType) bool {
+		key := compound.Key(a)
+		prefix := compound.PrefixN(a, 2)
+		return bytes.HasPrefix(key, prefix)
 	}
 	if err := quick.Check(check, nil); err != nil {
 		t.Error(err)

@@ -74,3 +74,17 @@ func TestDecodeString(t *testing.T) {
 		t.Errorf("bad Decode: %#v -> %q != %q", key, g, e)
 	}
 }
+
+func TestPrefixN(t *testing.T) {
+	type K struct {
+		A uint64
+		B string
+		C uint64
+	}
+	val := K{A: 42, B: "noise"}
+	fields := 1
+	key := compound.PrefixN(val, fields)
+	if g, e := string(key), "\x03\x00\x00\x00\x00\x00\x00\x00*"; g != e {
+		t.Errorf("bad PrefixN: %#v %d -> %q != %q", val, fields, g, e)
+	}
+}

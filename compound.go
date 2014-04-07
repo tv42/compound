@@ -65,19 +65,17 @@ func unquote(key []byte) (n int, val []byte, err error) {
 	}
 }
 
-// Key returns bytes that encode the key in a non-ambiguous,
-// order-preserving way. The key can later be decoded to recover the
-// individual fields.
-//
-// Key panics if value is not a struct or a pointer to a struct,
-// or if a field is of an unsupported type.
-func Key(value interface{}) []byte {
-	var key []byte
+func checkType(value interface{}) reflect.Value {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Struct {
 		panic(fmt.Errorf("compound.Key only works with structs: %T: %#v", value, value))
 	}
-	for i := 0; i < v.NumField(); i++ {
+	return v
+}
+
+func makeKey(v reflect.Value, n int) []byte {
+	var key []byte
+	for i := 0; i < n; i++ {
 		f := v.Field(i)
 		i := f.Interface()
 		switch x := i.(type) {
@@ -100,11 +98,25 @@ func Key(value interface{}) []byte {
 	return key
 }
 
+// Key returns bytes that encode the key in a non-ambiguous,
+// order-preserving way. The key can later be decoded to recover the
+// individual fields.
+//
+// Key panics if value is not a struct or a pointer to a struct,
+// or if a field is of an unsupported type.
+func Key(value interface{}) []byte {
+	v := checkType(value)
+	return makeKey(v, v.NumField())
+}
+
 // func Prefix(value interface{}) []byte {
 // }
 
-// func PrefixN(value interface{}, n int) []byte {
-// }
+// PrefixN encodes the first n fields. See Key for more.
+func PrefixN(value interface{}, n int) []byte {
+	v := checkType(value)
+	return makeKey(v, n)
+}
 
 // func PrefixPartial(value interface{}) []byte {
 // }

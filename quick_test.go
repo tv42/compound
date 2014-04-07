@@ -57,3 +57,18 @@ func TestQuickOrder(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestQuickRoundtrip(t *testing.T) {
+	good := func(a MyType) (MyType, error) {
+		return a, nil
+	}
+	unknown := func(a MyType) (MyType, error) {
+		key := compound.Key(a)
+		var r MyType
+		err := compound.Decode(key, &r)
+		return r, err
+	}
+	if err := quick.CheckEqual(good, unknown, nil); err != nil {
+		t.Error(err)
+	}
+}

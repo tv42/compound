@@ -9,9 +9,14 @@ package compound
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"reflect"
 )
+
+// ErrTooShort is returned when decoding a key that does not contain
+// the end marker.
+var ErrTooShort = errors.New("key is too short")
 
 const (
 	codeReservedZero byte = 0x00
@@ -27,6 +32,37 @@ func quote(key []byte, data []byte) []byte {
 	key = append(key, data...)
 	key = append(key, 0x00)
 	return key
+}
+
+func unquote(key []byte) (n int, val []byte, err error) {
+	for {
+		i := bytes.IndexByte(key, 0x00)
+		if i == -1 {
+			return n, nil, ErrTooShort
+		}
+		n += i
+		val = append(val, key[:i+1]...)
+		switch {
+		// cannot underflow because i would have been -1 above
+		case i == len(key)-1:
+			// looks like the last key, that's ok
+
+		// it is now safe to peek one past i
+		case key[i+1] == codeReservedQuote:
+			// it's a quoted nul; we already put it in val above
+			key = key[i:]
+			continue
+
+		default:
+			// it's not a quoted nul, so bail out
+		}
+
+		// take back the extra nul we put in val above
+		val = val[:len(val)-1]
+		// mark the nul consumed
+		n += 1
+		return
+	}
 }
 
 // Key returns bytes that encode the key in a non-ambiguous,
@@ -76,8 +112,69 @@ func Key(value interface{}) []byte {
 // func PrefixNPartial(value interface{}, n int) []byte {
 // }
 
-// func Decode(key []byte, ptr interface{}) error {
-// }
+// Decode fills the struct at ptr with the values of the fields in
+// key.
+//
+// ptr must be a pointer to a value of the same type as was passed to
+// Key earlier.
+//
+// Decode panics if ptr is not a pointer to a struct,
+// or if a field is of an unsupported type.
+func Decode(key []byte, ptr interface{}) error {
+	v := reflect.ValueOf(ptr)
+	if v.Kind() != reflect.Ptr {
+		panic(fmt.Errorf("compound.Decode only works with pointers to structs: %T: %#v", ptr, ptr))
+	}
+	v = v.Elem()
+	if v.Kind() != reflect.Struct {
+		panic(fmt.Errorf("compound.Decode only works with pointers to structs: %T: %#v", ptr, ptr))
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		if len(key) == 0 {
+			return ErrTooShort
+		}
+		code := key[0]
+		key = key[1:]
+		f := v.Field(i)
+		i := f.Interface()
+		switch i.(type) {
+		case []byte:
+			if code != codeBytes {
+				return fmt.Errorf("corrupt key: expecting bytes, got code %x", code)
+			}
+			n, b, err := unquote(key)
+			if err != nil {
+				return err
+			}
+			key = key[n:]
+			f.SetBytes(b)
+		case string:
+			if code != codeString {
+				return fmt.Errorf("corrupt key: expecting string, got code %x", code)
+			}
+			n, b, err := unquote(key)
+			if err != nil {
+				return err
+			}
+			key = key[n:]
+			f.SetString(string(b))
+		case uint64:
+			if code != codeUint64 {
+				return fmt.Errorf("corrupt key: expecting uint64, got code %x", code)
+			}
+			if len(key) < 8 {
+				return ErrTooShort
+			}
+			f.SetUint(binary.BigEndian.Uint64(key[:8]))
+			key = key[8:]
+		default:
+			panic(fmt.Errorf("compound.Key unsupported field type: %T: %#v", i, i))
+		}
+
+	}
+	return nil
+}
 
 // func DecodePrefix(key []byte, ptr interface{}) error {
 // }

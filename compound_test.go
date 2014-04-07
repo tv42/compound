@@ -60,3 +60,17 @@ func TestKeyUint64(t *testing.T) {
 		t.Errorf("bad Key: %#v -> %q != %q", val, g, e)
 	}
 }
+
+func TestDecodeString(t *testing.T) {
+	type T struct {
+		S string
+	}
+	key := []byte("\x02foo\x00")
+	var val T
+	if err := compound.Decode(key, &val); err != nil {
+		t.Fatal(err)
+	}
+	if g, e := val.S, "foo"; g != e {
+		t.Errorf("bad Decode: %#v -> %q != %q", key, g, e)
+	}
+}

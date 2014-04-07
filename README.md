@@ -48,7 +48,7 @@ prefix := compound.PrefixNPartial(MyKey{User: "jdoe", Album: "Travel in "}, 2)
 This does not terminate the last key, letting the above match "Travel
 in Europe".
 
-Prefixes can also be decoded:
+Prefixes can also be decoded (**not yet implemented**):
 
 ``` go
 // for keys from PrefixN

@@ -88,3 +88,17 @@ func TestPrefixN(t *testing.T) {
 		t.Errorf("bad PrefixN: %#v %d -> %q != %q", val, fields, g, e)
 	}
 }
+
+func TestPrefixNPartial(t *testing.T) {
+	type K struct {
+		A uint64
+		B string
+		C uint64
+	}
+	val := K{A: 42, B: "foo"}
+	fields := 2
+	key := compound.PrefixNPartial(val, fields)
+	if g, e := string(key), "\x03\x00\x00\x00\x00\x00\x00\x00*\x02foo"; g != e {
+		t.Errorf("bad PrefixNPartial: %#v %d -> %q != %q", val, fields, g, e)
+	}
+}

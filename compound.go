@@ -121,8 +121,15 @@ func PrefixN(value interface{}, n int) []byte {
 // func PrefixPartial(value interface{}) []byte {
 // }
 
-// func PrefixNPartial(value interface{}, n int) []byte {
-// }
+// PrefixNPartial encodes the first n fields. The last key will not be
+// marked as complete, allowing to perform prefix matching within the
+// value. See Key for more.
+func PrefixNPartial(value interface{}, n int) []byte {
+	v := checkType(value)
+	k := makeKey(v, n)
+	k = k[:len(k)-1]
+	return k
+}
 
 // Decode fills the struct at ptr with the values of the fields in
 // key.

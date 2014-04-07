@@ -103,3 +103,15 @@ func TestQuickPrefixProperty(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestQuickPartialProperty(t *testing.T) {
+	check := func(a MyType) bool {
+		prefix := compound.PrefixNPartial(a, 2)
+		a.B += "more"
+		key := compound.Key(a)
+		return bytes.HasPrefix(key, prefix)
+	}
+	if err := quick.Check(check, nil); err != nil {
+		t.Error(err)
+	}
+}
